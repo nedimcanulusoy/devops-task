@@ -1,0 +1,3 @@
+FROM atlassian/bitbucket-server:latest 
+
+CMD [ "sh", "-c", "([ ! -d  \"/var/atlassian/application-data/bitbucket/shared/\" ] && mkdir -p \"/var/atlassian/application-data/bitbucket/shared/\") ; ([ ! -f  \"/var/atlassian/application-data/bitbucket/shared/bitbucket.properties\" ] && touch /var/atlassian/application-data/bitbucket/shared/bitbucket.properties) ; (grep -qxF 'include \"server.context-path=/Bitbucket\"' /var/atlassian/application-data/bitbucket/shared/bitbucket.properties || echo \"server.context-path=/Bitbucket\" >> /var/atlassian/application-data/bitbucket/shared/bitbucket.properties) ; /opt/atlassian/bitbucket/bin/start-bitbucket.sh -fg" ]

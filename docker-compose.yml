@@ -1,0 +1,74 @@
+version: '3'
+services:
+  jira:
+    container_name: jira
+    image: atlassian/jira-software:latest
+    depends_on:
+      - postgresql
+    expose:
+      - '8080'
+    networks:
+      - jiranet
+    environment:
+      - ATL_PROXY_NAME=localhost
+      - ATL_PROXY_PORT=8080
+      - ATL_TOMCAT_SCHEME=http
+      - ATL_TOMCAT_CONTEXTPATH=/JIRA
+
+  bitbucket:
+    container_name: bitbucket
+    build:
+      context: ./docker/bitbucket
+    expose:
+      - '7990'
+    depends_on:
+      - postgresql
+    networks:
+      - jiranet
+    environment:
+      - SERVER_PROXY_NAME=localhost
+      - SERVER_PROXY_PORT=7990
+      - SERVER_SCHEME=http
+  #     - server.context-path=/bitbucket
+
+  postgresql:
+    container_name: postgres
+    image: postgres
+    expose:
+      - '5432'
+    ports:
+      - "5432:5432"
+    networks:
+      - jiranet
+    volumes:
+      - postgresqldata:/vatr/lib/postgresql/data
+      - ./docker_postgres_init.sql:/docker-entrypoint-initdb.d/docker_postgres_init.sql
+    environment:
+      - 'POSTGRES_USER=root'
+      - 'POSTGRES_PASSWORD=root'
+      - 'POSTGRES_DB=jiradb'
+      - 'POSTGRES_ENCODING=UNICODE'
+      - 'POSTGRES_COLLATE=C'
+      - 'POSTGRES_COLLATE_TYPE=C'
+
+  nginx:
+    container_name: nginx
+    image: nginx:latest
+    networks:
+      - jiranet
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - jira
+      - bitbucket
+    ports:
+      - "8080:8080"
+      - "7990:7990"
+
+volumes:
+  postgresqldata:
+    external: false
+
+networks:
+  jiranet:
+    driver: bridge
